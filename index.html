@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Midtown Manhattan Skyline Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* One visual world: a night-blue drafting table. Panels float over a full-bleed model; brass marks what is selected. */
+:root{color-scheme:dark;--ink:#0b0f15;--panel:rgba(12,16,23,.82);--line:rgba(255,255,255,.10);--fg:#ebe7de;--mute:#98a2ad;--brass:#d8b56d;--brass2:#f1d99f;--cool:#9fc4ff;
+  --display:'Fraunces',Georgia,serif;--body:'IBM Plex Sans','Noto Sans SC',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--ink);font-family:var(--body);color:var(--fg);-webkit-font-smoothing:antialiased}
+#app{position:fixed;inset:0}#app canvas{display:block}
+.labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.lbl{pointer-events:auto;cursor:pointer;font-size:12px;line-height:1;padding:5px 9px;border-radius:999px;background:rgba(9,12,17,.76);border:1px solid rgba(216,181,109,.5);color:#f3ead7;white-space:nowrap;transform:translateY(-10px);backdrop-filter:blur(4px);transition:background .2s,color .2s}
+.lbl.minor{font-size:11px;padding:4px 7px;border-color:rgba(255,255,255,.28);color:#dfe4ea}
+.lbl:hover{background:rgba(216,181,109,.92);color:#15120c}
+.lbl.sel{background:var(--brass);color:#15120c;font-weight:600}
+.lbl.ghost{border-style:dashed;border-color:rgba(159,196,255,.6);color:#d3e2ff}
+.ilbl{font-size:11px;line-height:1.25;padding:3px 7px;border-radius:4px;background:rgba(6,8,12,.84);border-left:3px solid var(--c,#fff);color:#fff;white-space:nowrap;pointer-events:none}
+.panel{position:fixed;background:var(--panel);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.45)}
+#top{top:12px;left:12px;right:12px;display:flex;gap:10px 22px;align-items:center;padding:10px 16px;flex-wrap:wrap;z-index:5}
+#top .brand{display:flex;flex-direction:column;min-width:200px}
+#top h1{font-family:var(--display);font-weight:600;font-size:19px;margin:0;letter-spacing:.2px;color:var(--brass2)}
+#top .sub{font-size:11.5px;color:var(--mute);margin-top:2px}
+.ctl{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mute)}
+.ctl b{color:var(--fg);font-weight:500;min-width:42px;display:inline-block;font-family:var(--mono);font-size:12px}
+input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:4px;background:rgba(255,255,255,.18);outline:none;width:140px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--brass);border:2px solid #1a1a1a;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--brass);border:2px solid #1a1a1a;cursor:pointer}
+input[type=range]:focus-visible,.btn:focus-visible,.tab:focus-visible,.item:focus-visible{outline:2px solid var(--cool);outline-offset:2px}
+.tog{display:flex;gap:6px;flex-wrap:wrap}
+.btn{font:inherit;font-size:12px;padding:6px 11px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--fg);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.btn:hover{background:rgba(255,255,255,.11)}
+.btn.on{background:rgba(216,181,109,.18);border-color:rgba(216,181,109,.65);color:var(--brass2)}
+.btn.primary{background:var(--brass);color:#15120c;border-color:var(--brass);font-weight:600}
+.btn.primary.on{background:#f3d38c;color:#15120c}
+#list{top:86px;left:12px;width:264px;bottom:12px;overflow:auto;padding:12px 10px;z-index:4}
+#list h3{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mute);margin:10px 6px 8px;font-weight:500}
+#views{display:flex;flex-wrap:wrap;gap:6px;padding:0 4px 4px}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:7px 9px;border-radius:9px;cursor:pointer;border:1px solid transparent}
+.item:hover{background:rgba(255,255,255,.05)}
+.item.sel{background:rgba(216,181,109,.12);border-color:rgba(216,181,109,.35)}
+.item.dim{opacity:.36}
+.item .n{font-size:13px;font-weight:500}
+.item .y{font-size:11px;color:var(--mute);text-align:right;font-family:var(--mono)}
+.item .bar{grid-column:1/3;height:3px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
+.item .bar i{display:block;height:100%;background:linear-gradient(90deg,#8a6f3c,var(--brass))}
+.item.ghost .bar i{background:linear-gradient(90deg,#3e5683,var(--cool))}
+.item.t2 .bar{display:none}
+#info{top:86px;right:12px;width:396px;bottom:12px;overflow:auto;z-index:4}
+#info .hd{padding:18px 20px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(12,16,23,.95);z-index:2;border-radius:14px 14px 0 0}
+#info .hd .zh{color:var(--brass2);font-size:13px}
+#info .hd h2{font-family:var(--display);margin:3px 0 4px;font-size:23px;font-weight:600;text-wrap:balance}
+#info .hd .addr{font-size:12px;color:var(--mute)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:9px;padding:8px 9px}
+.stat .k{font-size:10.5px;color:var(--mute)}
+.stat .v{font-size:15px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:11px;font-weight:400;color:var(--mute)}
+.tabs{display:flex;gap:4px;margin-top:14px}
+.tab{flex:1;text-align:center;font-size:12.5px;padding:7px 0;border-radius:8px;cursor:pointer;color:var(--mute);border:1px solid transparent}
+.tab.on{color:var(--fg);background:rgba(255,255,255,.07);border-color:var(--line)}
+#info .bd{padding:14px 20px 22px;font-size:13.5px;line-height:1.65}
+.kv{display:grid;grid-template-columns:86px 1fr;gap:6px 10px;font-size:13px}
+.kv .k{color:var(--mute)}
+.kv .mono{font-family:var(--mono);font-size:12.5px}
+ol.hist{padding-left:0;list-style:none;margin:0}
+ol.hist li{position:relative;padding:0 0 12px 18px;border-left:1px solid rgba(216,181,109,.3);margin-left:4px}
+ol.hist li:before{content:'';position:absolute;left:-5px;top:7px;width:9px;height:9px;border-radius:50%;background:var(--brass)}
+ol.hist li:last-child{border-left-color:transparent}
+ol.hist b{color:var(--brass2);font-weight:500;margin-right:6px}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px}
+.secbox{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.secbox .row{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--mute)}
+.secbox input[type=range]{flex:1;width:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11.5px;color:var(--mute);margin:8px 0 2px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+ul.int{margin:6px 0 0;padding-left:18px}ul.int li{margin-bottom:5px}
+.note{font-size:12.5px;color:var(--mute)}
+.intro p{margin:0 0 10px}
+.src{font-size:11.5px;color:var(--mute);border-top:1px solid var(--line);margin-top:14px;padding-top:10px}
+#events{left:50%;transform:translateX(-50%);bottom:44px;padding:9px 16px;font-size:12.5px;max-width:min(640px,calc(100vw - 720px));z-index:4;display:none}
+#events b{color:var(--brass2);font-family:var(--mono);font-weight:500;margin-right:8px}
+#slice{left:50%;transform:translateX(-50%);bottom:44px;padding:9px 14px;z-index:5;display:none;align-items:center;gap:10px;font-size:12px;color:var(--mute)}
+#slice input{width:260px}
+#coord{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,.72);pointer-events:none;z-index:3;text-shadow:0 1px 3px #000;white-space:nowrap;background:rgba(9,12,17,.55);padding:4px 10px;border-radius:999px}
+body.bare #list,body.bare #info,body.bare #events{display:none!important}body.bare #compass{right:16px}
+#tip{position:fixed;z-index:6;pointer-events:none;font-size:12px;background:rgba(9,12,17,.9);border:1px solid var(--line);padding:4px 8px;border-radius:6px;display:none;white-space:nowrap}
+#loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--ink);z-index:20;transition:opacity .6s}
+#loading h1{font-family:var(--display);color:var(--brass2);font-weight:600;margin:0 0 14px;font-size:26px}
+#loading .pb{width:240px;height:3px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+#loading .pb i{display:block;height:100%;width:0;background:var(--brass);transition:width .2s}
+#loading .msg{font-size:12px;color:var(--mute);margin-top:10px}
+#compass{position:fixed;right:424px;bottom:16px;width:46px;height:46px;z-index:3;pointer-events:none}
+@media (max-width:1100px){#list{width:220px}#info{width:340px}#compass{right:366px}#events{max-width:calc(100vw - 620px)}}
+@media (max-width:820px){
+  #top{gap:8px 10px;padding:8px 10px}#top .brand{min-width:0}#top h1{font-size:16px}#top .sub{display:none}
+  input[type=range]{width:100px}#list{display:none}
+  #info{left:8px;right:8px;width:auto;top:auto;bottom:8px;max-height:44vh}
+  #events,#coord{display:none!important}#compass{right:12px;bottom:auto;top:170px}#slice{bottom:46vh}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="app"></div>
+<div id="loading"><h1>Midtown Manhattan</h1><div class="pb"><i></i></div><div class="msg">Painting facades</div></div>
+
+<div id="top" class="panel">
+  <div class="brand"><h1>Midtown Manhattan</h1><div class="sub">Georeferenced skyline model, 30th Street to Central Park</div></div>
+  <label class="ctl" for="time">Time <input id="time" type="range" min="5" max="23.5" step="0.05" value="17.2"><b id="timeV">17:12</b></label>
+  <label class="ctl" for="year">Year <input id="year" type="range" min="1890" max="2026" step="1" value="2026"><b id="yearV">2026</b></label>
+  <div class="tog">
+    <button class="btn on" id="tPanels" title="Show or hide the side panels">Panels</button>
+    <button class="btn on" id="tLabels">Labels</button>
+    <button class="btn on" id="tCars">Traffic</button>
+    <button class="btn" id="tXray" title="Make every building transparent and show floors, cores and elevators">X-ray city</button>
+    <button class="btn" id="tSlice" title="Cut the whole model with a vertical plane">Slice city</button>
+    <button class="btn" id="tTour">Orbit</button>
+  </div>
+</div>
+
+<div id="list" class="panel"></div>
+<div id="info" class="panel"></div>
+<div id="events" class="panel"></div>
+<div id="slice" class="panel"><span id="sliceLbl">Cut along a street</span><input id="slicePos" type="range" min="0" max="1" step="0.002" value="0.45"><button class="btn" id="sliceAx">Turn 90&deg;</button></div>
+<div id="coord">Move over the ground for latitude and longitude</div>
+<div id="tip"></div>
+<svg id="compass" viewBox="-25 -25 50 50" aria-label="Compass: gold needle points to true north"><circle r="22" fill="rgba(12,16,23,.78)" stroke="rgba(255,255,255,.15)"/><g id="cneedle"><path d="M0,-17 L5,0 L0,4 L-5,0Z" fill="#d8b56d"/><path d="M0,17 L5,0 L0,-4 L-5,0Z" fill="#555"/><text y="-19" x="0" font-size="7" text-anchor="middle" fill="#111" font-weight="700">N</text></g></svg>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
