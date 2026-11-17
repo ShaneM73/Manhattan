@@ -114,24 +114,25 @@ body.bare #list,body.bare #info,body.bare #events{display:none!important}body.ba
 <div id="loading"><h1>Midtown Manhattan</h1><div class="pb"><i></i></div><div class="msg">Painting facades</div></div>
 
 <div id="top" class="panel">
-  <div class="brand"><h1>Midtown Manhattan</h1><div class="sub">Georeferenced skyline model, 30th Street to Central Park</div></div>
-  <label class="ctl" for="time">Time <input id="time" type="range" min="5" max="23.5" step="0.05" value="17.2"><b id="timeV">17:12</b></label>
-  <label class="ctl" for="year">Year <input id="year" type="range" min="1890" max="2026" step="1" value="2026"><b id="yearV">2026</b></label>
+  <div class="brand"><h1 data-i="Midtown Manhattan">Midtown Manhattan</h1><div class="sub" data-i="Georeferenced skyline model, 30th Street to Central Park">Georeferenced skyline model, 30th Street to Central Park</div></div>
+  <label class="ctl" for="time"><span data-i="Time">Time</span> <input id="time" type="range" min="5" max="23.5" step="0.05" value="17.2"><b id="timeV">17:12</b></label>
+  <label class="ctl" for="year"><span data-i="Year">Year</span> <input id="year" type="range" min="1890" max="2026" step="1" value="2026"><b id="yearV">2026</b></label>
   <div class="tog">
-    <button class="btn on" id="tPanels" title="Show or hide the side panels">Panels</button>
-    <button class="btn on" id="tLabels">Labels</button>
-    <button class="btn on" id="tCars">Traffic</button>
-    <button class="btn" id="tXray" title="Make every building transparent and show floors, cores and elevators">X-ray city</button>
-    <button class="btn" id="tSlice" title="Cut the whole model with a vertical plane">Slice city</button>
-    <button class="btn" id="tTour">Orbit</button>
+    <button class="btn on" id="tPanels" title="Show or hide the side panels" data-i="Panels">Panels</button>
+    <button class="btn on" id="tLabels" data-i="Labels">Labels</button>
+    <button class="btn on" id="tCars" data-i="Traffic">Traffic</button>
+    <button class="btn" id="tXray" title="Make every building transparent and show floors, cores and elevators" data-i="X-ray city">X-ray city</button>
+    <button class="btn" id="tSlice" title="Cut the whole model with a vertical plane" data-i="Slice city">Slice city</button>
+    <button class="btn" id="tTour" data-i="Orbit">Orbit</button>
+    <button class="btn" id="tLang" title="Switch language / 切换语言" lang="zh-CN">中文</button>
   </div>
 </div>
 
 <div id="list" class="panel"></div>
 <div id="info" class="panel"></div>
 <div id="events" class="panel"></div>
-<div id="slice" class="panel"><span id="sliceLbl">Cut along a street</span><input id="slicePos" type="range" min="0" max="1" step="0.002" value="0.45"><button class="btn" id="sliceAx">Turn 90&deg;</button></div>
-<div id="coord">Move over the ground for latitude and longitude</div>
+<div id="slice" class="panel"><span id="sliceLbl">Cut along a street</span><input id="slicePos" type="range" min="0" max="1" step="0.002" value="0.45"><button class="btn" id="sliceAx" data-i="Turn 90°">Turn 90°</button></div>
+<div id="coord" data-i="Move over the ground for latitude and longitude">Move over the ground for latitude and longitude</div>
 <div id="tip"></div>
 <svg id="compass" viewBox="-25 -25 50 50" aria-label="Compass: gold needle points to true north"><circle r="22" fill="rgba(12,16,23,.78)" stroke="rgba(255,255,255,.15)"/><g id="cneedle"><path d="M0,-17 L5,0 L0,4 L-5,0Z" fill="#d8b56d"/><path d="M0,17 L5,0 L0,-4 L-5,0Z" fill="#555"/><text y="-19" x="0" font-size="7" text-anchor="middle" fill="#111" font-weight="700">N</text></g></svg>
 

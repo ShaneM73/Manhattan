@@ -2,6 +2,7 @@ import { THREE, cfg, rnd, rr, pick, clamp, smooth, R, C, CIRC, centroid, insetPo
   toLL, GEO, AVES, vS, wS, ub, shoreE, shoreW, SHORE_PTS, SHORE_WPTS, SHORE_W } from './core.js';
 import { S, M, FACADE_MATS, buildTextures } from './tex.js';
 import { DEF } from './buildings.js';
+import { UI, TXT, EV, SP, ZH } from './zh.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -11,6 +12,10 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
 const $=s=>document.querySelector(s);
+// language: English by default, Chinese as an option
+let LANG='en';try{if(localStorage.getItem('mm-lang')==='zh')LANG='zh'}catch(e){}
+const t=x=>LANG==='zh'&&UI[x]!==undefined?UI[x]:x;const Z=(en,zh)=>LANG==='zh'?zh:en;
+const nm=L=>LANG==='zh'?L.zh:L.name;const fld=(L,k)=>LANG==='zh'&&ZH[L.id]&&ZH[L.id][k]!==undefined?ZH[L.id][k]:L[k];
 const loadBar=$('#loading .pb i'),loadMsg=$('#loading .msg');
 const tick=(p,msg)=>{loadBar.style.width=(p*100)+'%';loadMsg.textContent=msg;return new Promise(r=>requestAnimationFrame(()=>setTimeout(r,0)))};
 
@@ -69,7 +74,7 @@ class Bld{
 function buildLandmarks(){
   for(const L of DEF){const B=new Bld(L);L.bld=B;L.build(B);L.box=new THREE.Box3().setFromObject(B.shell);B.root.position.set(L.u,0,-L.v);city.add(B.root);LM[L.id]=L;LMS.push(L);L.root=B.root;L.ll=toLL(L.u,L.v);L.I=L.I||{};
     if(!L.lots)L.lots=[[L.u+L.box.min.x-2,L.u+L.box.max.x+2,L.v-L.box.max.z-2,L.v-L.box.min.z+2]];
-    const d=document.createElement('div');d.className='lbl'+(L.ghost?' ghost':'')+(L.tier===2?' minor':'');d.textContent=L.name;d.onclick=e=>{e.stopPropagation();select(L.id,true)};
+    const d=document.createElement('div');d.className='lbl'+(L.ghost?' ghost':'')+(L.tier===2?' minor':'');d.textContent=nm(L);d.onclick=e=>{e.stopPropagation();select(L.id,true)};
     const lo=new CSS2DObject(d);const c=L.box.getCenter(new THREE.Vector3());const top=L.tier===1||L.ghost?Math.max(L.box.max.y,0):Math.min(L.box.max.y,L.h);
     lo.position.set(L.id==='rock'?15:L.id==='hy'?46:L.id==='tsq'?72:c.x*0.3,top+6,L.id==='hy'||L.id==='rock'||L.id==='tsq'?0:c.z*0.3);lo.userData.want=true;lo.userData.L=L;B.root.add(lo);L.label=lo;L.labelEl=d;LABELS.push(lo)}
 }
@@ -233,14 +238,14 @@ function buildInterior(L){
     const o=prismInto({},p,s.y,s.y+s.h,{bottom:true}),colr=new THREE.Color(KC[s.k]);
     const mm=new THREE.Mesh(groupGeo(o),new THREE.MeshBasicMaterial({color:colr,transparent:true,opacity:0.33,depthWrite:false,side:THREE.DoubleSide}));g.add(mm);
     g.add(new THREE.LineSegments(new THREE.EdgesGeometry(mm.geometry),new THREE.LineBasicMaterial({color:colr})));
-    if(s.t){const d=document.createElement('div');d.className='ilbl';d.style.setProperty('--c',KC[s.k]);d.textContent=s.t;const lo=new CSS2DObject(d),cc=centroid(p);lo.position.set(cc[0],s.y+s.h/2,cc[1]);lo.center.set(-0.08,0.5);lo.userData.want=false;g.add(lo);L.ilabels.push(lo);LABELS.push(lo)}}
+    if(s.t){const d=document.createElement('div');d.className='ilbl';d.style.setProperty('--c',KC[s.k]);d.dataset.en=s.t;d.textContent=LANG==='zh'&&SP[s.t]||s.t;const lo=new CSS2DObject(d),cc=centroid(p);lo.position.set(cc[0],s.y+s.h/2,cc[1]);lo.center.set(-0.08,0.5);lo.userData.want=false;g.add(lo);L.ilabels.push(lo);LABELS.push(lo)}}
   if(L.id==='gct'){const fl=new THREE.Mesh(new THREE.PlaneGeometry(84,37),new THREE.MeshStandardMaterial({color:0xd8ccb2,roughness:0.35}));fl.rotation.x=-Math.PI/2;fl.position.y=0.3;g.add(fl);
     const ce=new THREE.Mesh(new THREE.PlaneGeometry(84,37),M.celestial.clone());ce.rotation.x=Math.PI/2;ce.position.y=36.5;g.add(ce);
     const bo=new THREE.Mesh(new THREE.CylinderGeometry(4,4,3.4,24),M.gold.clone());bo.position.y=1.9;g.add(bo);
     for(const [y,n,wd] of [[-10,41,100],[-18,26,70]]){const lp=[];for(let i=0;i<n;i++){const x=-wd/2+i*wd/(n-1);lp.push(x,y,40,x,y,-420)}const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));g.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0xc9c2b4})));
       for(let i=0;i<n;i+=2){const pl=new THREE.Mesh(new THREE.BoxGeometry(wd/(n-1)*0.7,1,300),new THREE.MeshStandardMaterial({color:0x9a958c}));pl.position.set(-wd/2+(i+0.5)*wd/(n-1),y+0.5,-110);g.add(pl)}}}
   if(I.walls){for(const T of tiers){const d=Math.abs(T.bot[2][1]-T.bot[0][1]),cz=(T.bot[2][1]+T.bot[0][1])/2;for(const sx of [-1,1]){const wl=new THREE.Mesh(new THREE.BoxGeometry(1.4,T.y1-T.y0,d-1),new THREE.MeshStandardMaterial({color:0xa9b0b6,transparent:true,opacity:0.55,depthWrite:false}));wl.position.set(sx*8.2,(T.y0+T.y1)/2,cz);g.add(wl)}}
-    const d=document.createElement('div');d.className='ilbl';d.style.setProperty('--c','#9fb3c4');d.textContent='Concrete shear walls on the east and west sides';const lo=new CSS2DObject(d);lo.position.set(9,160,0);lo.center.set(-0.08,0.5);lo.userData.want=false;g.add(lo);L.ilabels.push(lo);LABELS.push(lo)}
+    const d=document.createElement('div');d.className='ilbl';d.style.setProperty('--c','#9fb3c4');d.dataset.en='Concrete shear walls on the east and west sides';d.textContent=t(d.dataset.en);const lo=new CSS2DObject(d);lo.position.set(9,160,0);lo.center.set(-0.08,0.5);lo.userData.want=false;g.add(lo);L.ilabels.push(lo);LABELS.push(lo)}
   L.floorsModel=floors;
 }
 
@@ -316,7 +321,7 @@ const EVENTS=[[1891,'Carnegie Hall opens'],[1897,'The combined Waldorf-Astoria i
 function applyYear(y){YEAR=y;$('#yearV').textContent=y;
   for(const L of LMS){const vis=y>=L.year&&(!L.end||y<L.end);L.root.visible=vis;L.label.userData.want=vis;for(const m of L.bld.shell.children)if(m.userData.since)m.visible=y>=m.userData.since;const it=document.querySelector(`.item[data-id="${L.id}"]`);if(it)it.classList.toggle('dim',!vis)}
   for(const o of CTX.children)if(o.userData.start!==undefined)o.visible=y>=o.userData.start&&y<o.userData.end&&!((XALL||SLICE)&&o.userData.wt);
-  const ev=$('#events');if(y<2026&&!SLICE){const near=EVENTS.filter(e=>e[0]<=y&&e[0]>y-12).slice(-2);ev.style.display=near.length?'block':'none';ev.innerHTML=near.map(e=>`<div><b>${e[0]}</b>${e[1]}</div>`).join('')}else ev.style.display='none';
+  const ev=$('#events');if(y<2026&&!SLICE){const near=EVENTS.filter(e=>e[0]<=y&&e[0]>y-12).slice(-2);ev.style.display=near.length?'block':'none';ev.innerHTML=near.map(e=>`<div><b>${e[0]}</b>${LANG==='zh'&&EV[e[0]]||e[1]}</div>`).join('')}else ev.style.display='none';
 }
 
 /* ============================ see-through state ============================ */
@@ -341,7 +346,7 @@ function refresh(){
   const L=SEL&&LM[SEL],under=L&&L.I.underground&&modeOf(L)!=='n';for(const m of groundMats){if(m.transparent!==!!under){m.transparent=!!under;m.opacity=under?0.35:1;m.depthWrite=!under;m.needsUpdate=true}}
   if(L&&modeOf(L)==='cut')updatePlane(L);if(SLICE)updateGPlane();
   for(const o of CTX.children)if(o.userData.wt)o.visible=!XALL&&!SLICE&&YEAR>=o.userData.start&&YEAR<o.userData.end;
-  $('#slice').style.display=SLICE?'flex':'none';$('#sliceLbl').textContent=SLICEAX==='v'?'Cut along a street':'Cut along an avenue';
+  $('#slice').style.display=SLICE?'flex':'none';$('#sliceLbl').textContent=t(SLICEAX==='v'?'Cut along a street':'Cut along an avenue');
 }
 
 /* ============================ georeferenced export ============================ */
@@ -352,7 +357,7 @@ function geojson(ids,withGhosts=false){const F=[];
     F.push({type:'Feature',properties:{id:L.id,kind:'landmark',name:L.name,name_zh:L.zh,address:L.addr,year_built:L.year,...(L.end?{year_demolished:L.end}:{}),height_m:L.h,floors:L.floors,architect:L.arch,structure:L.struct,facade:L.facade,model_heading_deg:GEO.bearing},geometry:{type:'Point',coordinates:L.ll.map(n=>+n.toFixed(7))}});
     L.bld.parts.forEach((p,i)=>F.push({type:'Feature',properties:{id:L.id,kind:'part',name:L.name,part:i,base_height:r2(p.y0),height:r2(p.y1),min_height:r2(p.y0),tapered:!!p.to,year_built:L.year,...(L.end?{year_demolished:L.end}:{})},geometry:{type:'Polygon',coordinates:ring(L,p.bot)}}))}
   return{type:'FeatureCollection',name:'midtown_manhattan_landmarks',description:'Approximate footprints by building part with base_height and height in metres above local ground. WGS84 lon/lat. Positions are derived from the street grid: about 30 m from published coordinates on average, 60 m at worst. Ground elevation is not included.',features:F}}
-async function copyText(t,btn){const old=btn.textContent;try{await navigator.clipboard.writeText(t);btn.textContent='Copied'}catch(e){btn.textContent='Copy blocked here'}setTimeout(()=>btn.textContent=old,1600)}
+async function copyText(txt,btn){const old=btn.textContent;try{await navigator.clipboard.writeText(txt);btn.textContent=t('Copied')}catch(e){btn.textContent=t('Copy blocked here')}setTimeout(()=>btn.textContent=old,1600)}
 
 /* ============================ UI ============================ */
 const selRing=new THREE.Mesh(new THREE.RingGeometry(1,1.07,96),new THREE.MeshBasicMaterial({color:0xd8b56d,transparent:true,opacity:0.8,depthWrite:false,side:THREE.DoubleSide,fog:false}));selRing.rotation.x=-Math.PI/2;selRing.visible=false;city.add(selRing);
@@ -360,41 +365,45 @@ const VIEWS={hudson:{n:'Hudson, golden hour',p:[-3250,690,-1050],t:[-150,150,100
 let FLY=null;
 function goView(k){const V=VIEWS[k];FLY={t:0,p0:camera.position.clone(),t0:controls.target.clone(),p1:W(...V.p),t1:W(...V.t)};$('#time').value=V.time;applyTime(V.time)}
 function renderList(){const mx=480,a=LMS.filter(l=>l.tier===1).sort((x,y)=>y.h-x.h),b=LMS.filter(l=>l.tier===2).sort((x,y)=>y.h-x.h),g=LMS.filter(l=>l.ghost);
-  const it=L=>`<div class="item${L.ghost?' ghost':''}${L.tier===2?' t2':''}${SEL===L.id?' sel':''}" data-id="${L.id}" tabindex="0"><div class="n">${L.name}</div><div class="y">${L.year}${L.end?'-'+L.end:''} · ${L.h} m</div><div class="bar"><i style="width:${Math.max(4,L.h/mx*100)}%"></i></div></div>`;
-  $('#list').innerHTML=`<h3>Views</h3><div id="views">${Object.entries(VIEWS).map(([k,v])=>`<button class="btn" data-v="${k}">${v.n}</button>`).join('')}</div><h3>Featured, by height</h3>${a.map(it).join('')}<h3>Also modelled</h3>${b.map(it).join('')}<h3>Vanished (move the year slider)</h3>${g.map(it).join('')}`;
+  const it=L=>`<div class="item${L.ghost?' ghost':''}${L.tier===2?' t2':''}${SEL===L.id?' sel':''}" data-id="${L.id}" tabindex="0"><div class="n">${nm(L)}</div><div class="y">${L.year}${L.end?'-'+L.end:''} · ${L.h} m</div><div class="bar"><i style="width:${Math.max(4,L.h/mx*100)}%"></i></div></div>`;
+  $('#list').innerHTML=`<h3>${t('Views')}</h3><div id="views">${Object.entries(VIEWS).map(([k,v])=>`<button class="btn" data-v="${k}">${t(v.n)}</button>`).join('')}</div><h3>${t('Featured, by height')}</h3>${a.map(it).join('')}<h3>${t('Also modelled')}</h3>${b.map(it).join('')}<h3>${t('Vanished (move the year slider)')}</h3>${g.map(it).join('')}`;
   document.querySelectorAll('.item').forEach(e=>{e.onclick=()=>select(e.dataset.id,true);e.onkeydown=ev=>{if(ev.key==='Enter')select(e.dataset.id,true)}});
   document.querySelectorAll('#views .btn').forEach(e=>e.onclick=()=>{select(null);goView(e.dataset.v)})}
-const fmtFloors=L=>typeof L.floors==='number'?`${L.floors}<small> floors</small>`:`<small>${L.floors}</small>`;
+const fmtFloors=L=>typeof L.floors==='number'?`${L.floors}<small>${t(' floors')}</small>`:`<small>${fld(L,'floors')}</small>`;
 const fmtLL=ll=>`${Math.abs(ll[1]).toFixed(5)}°${ll[1]>=0?'N':'S'}, ${Math.abs(ll[0]).toFixed(5)}°${ll[0]>=0?'E':'W'}`;
 function renderInfo(){const el=$('#info');
-  if(!SEL){const n1=LMS.filter(l=>!l.ghost).length;el.innerHTML=`<div class="hd"><div class="zh">曼哈顿中城</div><h2>Midtown Manhattan skyline</h2><div class="addr">Hudson River to East River, 30th Street to Central Park</div></div>
-   <div class="bd intro"><p>${n1} landmark sites are modelled at true height on the real street grid, among several thousand generated context buildings. Every landmark carries a WGS84 position.</p>
+  if(!SEL){const n1=LMS.filter(l=>!l.ghost).length;el.innerHTML=`<div class="hd"><div class="zh">${Z('曼哈顿中城','Midtown Manhattan')}</div><h2>${t('Midtown Manhattan skyline')}</h2><div class="addr">${t('Hudson River to East River, 30th Street to Central Park')}</div></div>
+   <div class="bd intro">${LANG==='zh'?TXT.intro(n1):`<p>${n1} landmark sites are modelled at true height on the real street grid, among several thousand generated context buildings. Every landmark carries a WGS84 position.</p>
    <p><b>Look inside.</b> Select a building and open <b>Inside</b> to cut it open, or use <b>X-ray city</b> and <b>Slice city</b> above to see through everything at once. Floors, cores, moving elevators and columns appear, with key rooms marked.</p>
-   <p><b>Time.</b> Drag <b>Time</b> for sunset and night lighting. Drag <b>Year</b> back to 1890 to watch the skyline grow and to bring back demolished buildings such as the first Penn Station.</p>
-   <div class="actions"><button class="btn" id="cpAll">Copy GeoJSON of all landmarks</button></div>
-   <p class="note">What is real: heights, dates, designers, street positions and the facts in each history. What is approximate: footprints, setback levels and all interiors, which are schematic and not surveyed floor plans. Context buildings are generated stand-ins, not real addresses. Facade materials are painted procedurally, not photographs.</p>
-   <div class="src">Data: CTBUH Skyscraper Center, Wikipedia building articles and the list of tallest buildings in New York City, NYC Landmarks Preservation Commission reports, KPF and Skyscraper Museum publications.</div></div>`;
+   <p><b>Time.</b> Drag <b>Time</b> for sunset and night lighting. Drag <b>Year</b> back to 1890 to watch the skyline grow and to bring back demolished buildings such as the first Penn Station.</p>`}
+   <div class="actions"><button class="btn" id="cpAll">${t('Copy GeoJSON of all landmarks')}</button></div>
+   <p class="note">${Z('What is real: heights, dates, designers, street positions and the facts in each history. What is approximate: footprints, setback levels and all interiors, which are schematic and not surveyed floor plans. Context buildings are generated stand-ins, not real addresses. Facade materials are painted procedurally, not photographs.',TXT.real)}</p>
+   <div class="src">${Z('Data: CTBUH Skyscraper Center, Wikipedia building articles and the list of tallest buildings in New York City, NYC Landmarks Preservation Commission reports, KPF and Skyscraper Museum publications.',TXT.src)}</div></div>`;
    $('#cpAll').onclick=e=>copyText(JSON.stringify(geojson()),e.target);return}
   const L=LM[SEL],tabs=[['overview','Overview'],['history','History'],['inside','Inside'],['geo','Location']];let bd='';
-  if(TAB==='overview')bd=`<div class="kv"><div class="k">Architect</div><div>${L.arch}</div><div class="k">Structure</div><div>${L.struct}</div><div class="k">Facade</div><div>${L.facade}</div><div class="k">Address</div><div>${L.addr}</div>${L.roof&&L.roof!==L.h?`<div class="k">Roof height</div><div>${L.roof} m</div>`:''}</div>`;
-  if(TAB==='history')bd=`<ol class="hist">${L.hist.map(([y,t])=>`<li><b>${y}</b>${t}</li>`).join('')}</ol>`;
+  if(TAB==='overview')bd=`<div class="kv"><div class="k">${t('Architect')}</div><div>${L.arch}</div><div class="k">${t('Structure')}</div><div>${fld(L,'struct')}</div><div class="k">${t('Facade')}</div><div>${fld(L,'facade')}</div><div class="k">${t('Address')}</div><div>${fld(L,'addr')}</div>${L.roof&&L.roof!==L.h?`<div class="k">${t('Roof height')}</div><div>${L.roof} m</div>`:''}</div>`;
+  if(TAB==='history')bd=`<ol class="hist">${fld(L,'hist').map(([y,x])=>`<li><b>${y}</b>${x}</li>`).join('')}</ol>`;
   if(TAB==='inside'){const on=SECTION||XRAY||XALL||SLICE;if(on&&!L.interior)buildInterior(L);const ks=[...new Set((L.I.special||[]).map(s=>s.k))];
-    bd=`<div class="actions"><button class="btn primary${SECTION?' on':''}" id="bSec">${SECTION?'Close the cut':'Cut building open'}</button><button class="btn${XRAY?' on':''}" id="bX">X-ray</button>${SECTION?`<button class="btn" id="bAx">Cut faces: ${AXIS==='auto'?'camera':AXIS==='x'?'east-west':'north-south'}</button>`:''}</div>
-    ${on?`<div class="secbox">${SECTION?`<div class="row">Keep <input id="cut" type="range" min="0" max="1" step="0.005" value="${CUT}"></div>`:''}<div class="legend"><span><i style="background:#d8d3ca"></i>Floor slabs</span>${L.hasCore?'<span><i style="background:#8f979e"></i>Core</span><span><i style="background:#ffd34d"></i>Elevators</span>':''}${L.colKind?`<span><i style="background:${L.colColor}"></i>${L.colKind}</span>`:''}${ks.map(k=>`<span><i style="background:${KC[k]}"></i>${KN[k]}</span>`).join('')}</div></div>`:''}
-    <ul class="int">${L.inside.map(t=>`<li>${t}</li>`).join('')}</ul><p class="note">Schematic interior: floor levels follow the real floor count and height; core, column and elevator layouts are illustrative${L.I.core||(L.I.special||[]).length?', with named spaces placed from published descriptions':''}.</p>`}
-  if(TAB==='geo')bd=`<div class="kv"><div class="k">Latitude</div><div class="mono">${L.ll[1].toFixed(6)}</div><div class="k">Longitude</div><div class="mono">${L.ll[0].toFixed(6)}</div><div class="k">Model origin</div><div>Centre of the building's local axes, at ground level</div><div class="k">Orientation</div><div>Street grid, ${GEO.bearing}° clockwise from true north</div><div class="k">Grid offset</div><div class="mono">${r2(L.u)} m cross-town, ${r2(L.v)} m uptown</div><div class="k">Parts</div><div>${L.bld.parts.length} extrusions</div></div>
-    <div class="actions" style="margin-top:14px"><button class="btn" id="cpLL">Copy lat, lon</button><button class="btn" id="cpGJ">Copy GeoJSON for this building</button></div>
-    <p class="note">The GeoJSON holds one polygon per building part with <span style="font-family:var(--mono)">base_height</span> and <span style="font-family:var(--mono)">height</span>, ready for extrusion layers in MapLibre, Mapbox, deck.gl or QGIS. Positions come from the street grid and land within about 30 m of published coordinates on average, 60 m at worst; footprints are approximate.</p>`;
-  el.innerHTML=`<div class="hd"><div class="zh">${L.zh}</div><h2>${L.name}</h2><div class="addr">${L.addr}</div>
-   <div class="stats"><div class="stat"><div class="k">${L.ghost?'Stood':'Completed'}</div><div class="v">${L.year}${L.end?'<small>-'+L.end+'</small>':''}</div></div><div class="stat"><div class="k">Height</div><div class="v">${L.h}<small> m</small></div></div><div class="stat"><div class="k">Floors</div><div class="v">${fmtFloors(L)}</div></div></div>
-   <div class="tabs">${tabs.map(([k,t])=>`<div class="tab${TAB===k?' on':''}" data-t="${k}" tabindex="0">${t}</div>`).join('')}</div></div><div class="bd">${bd}</div>`;
-  el.querySelectorAll('.tab').forEach(t=>{t.onclick=()=>{TAB=t.dataset.t;renderInfo()};t.onkeydown=e=>{if(e.key==='Enter'){TAB=t.dataset.t;renderInfo()}}});
+    bd=`<div class="actions"><button class="btn primary${SECTION?' on':''}" id="bSec">${t(SECTION?'Close the cut':'Cut building open')}</button><button class="btn${XRAY?' on':''}" id="bX">${t('X-ray')}</button>${SECTION?`<button class="btn" id="bAx">${t('Cut faces: ')}${t(AXIS==='auto'?'camera':AXIS==='x'?'east-west':'north-south')}</button>`:''}</div>
+    ${on?`<div class="secbox">${SECTION?`<div class="row">${t('Keep')} <input id="cut" type="range" min="0" max="1" step="0.005" value="${CUT}"></div>`:''}<div class="legend"><span><i style="background:#d8d3ca"></i>${t('Floor slabs')}</span>${L.hasCore?`<span><i style="background:#8f979e"></i>${t('Core')}</span><span><i style="background:#ffd34d"></i>${t('Elevators')}</span>`:''}${L.colKind?`<span><i style="background:${L.colColor}"></i>${t(L.colKind)}</span>`:''}${ks.map(k=>`<span><i style="background:${KC[k]}"></i>${t(KN[k])}</span>`).join('')}</div></div>`:''}
+    <ul class="int">${fld(L,'inside').map(x=>`<li>${x}</li>`).join('')}</ul><p class="note">${LANG==='zh'?TXT.inside(L.I.core||(L.I.special||[]).length):`Schematic interior: floor levels follow the real floor count and height; core, column and elevator layouts are illustrative${L.I.core||(L.I.special||[]).length?', with named spaces placed from published descriptions':''}.`}</p>`}
+  if(TAB==='geo')bd=`<div class="kv"><div class="k">${t('Latitude')}</div><div class="mono">${L.ll[1].toFixed(6)}</div><div class="k">${t('Longitude')}</div><div class="mono">${L.ll[0].toFixed(6)}</div><div class="k">${t('Model origin')}</div><div>${t("Centre of the building's local axes, at ground level")}</div><div class="k">${t('Orientation')}</div><div>${t('Street grid, ')}${GEO.bearing}°${t(' clockwise from true north')}</div><div class="k">${t('Grid offset')}</div><div class="mono">${r2(L.u)}${t(' m cross-town, ')}${r2(L.v)}${t(' m uptown')}</div><div class="k">${t('Parts')}</div><div>${L.bld.parts.length}${t(' extrusions')}</div></div>
+    <div class="actions" style="margin-top:14px"><button class="btn" id="cpLL">${t('Copy lat, lon')}</button><button class="btn" id="cpGJ">${t('Copy GeoJSON for this building')}</button></div>
+    <p class="note">${LANG==='zh'?TXT.geo:`The GeoJSON holds one polygon per building part with <span style="font-family:var(--mono)">base_height</span> and <span style="font-family:var(--mono)">height</span>, ready for extrusion layers in MapLibre, Mapbox, deck.gl or QGIS. Positions come from the street grid and land within about 30 m of published coordinates on average, 60 m at worst; footprints are approximate.`}</p>`;
+  el.innerHTML=`<div class="hd"><div class="zh">${Z(L.zh,L.name)}</div><h2>${nm(L)}</h2><div class="addr">${fld(L,'addr')}</div>
+   <div class="stats"><div class="stat"><div class="k">${t(L.ghost?'Stood':'Completed')}</div><div class="v">${L.year}${L.end?'<small>-'+L.end+'</small>':''}</div></div><div class="stat"><div class="k">${t('Height')}</div><div class="v">${L.h}<small> m</small></div></div><div class="stat"><div class="k">${t('Floors')}</div><div class="v">${fmtFloors(L)}</div></div></div>
+   <div class="tabs">${tabs.map(([k,x])=>`<div class="tab${TAB===k?' on':''}" data-t="${k}" tabindex="0">${t(x)}</div>`).join('')}</div></div><div class="bd">${bd}</div>`;
+  el.querySelectorAll('.tab').forEach(x=>{x.onclick=()=>{TAB=x.dataset.t;renderInfo()};x.onkeydown=e=>{if(e.key==='Enter'){TAB=x.dataset.t;renderInfo()}}});
   const on=(id,fn)=>{const b=$(id);if(b)b.onclick=fn};
   on('#bSec',()=>{SECTION=!SECTION;if(SECTION){XRAY=false;CUT=Math.min(CUT,0.6)}refresh();renderInfo()});on('#bX',()=>{XRAY=!XRAY;if(XRAY)SECTION=false;refresh();renderInfo()});
   on('#bAx',()=>{AXIS=AXIS==='auto'?'x':AXIS==='x'?'z':'auto';refresh();renderInfo()});
   on('#cpLL',e=>copyText(`${L.ll[1].toFixed(6)}, ${L.ll[0].toFixed(6)}`,e.target));on('#cpGJ',e=>copyText(JSON.stringify(geojson([L.id])),e.target));
   const ct=$('#cut');if(ct)ct.oninput=e=>{CUT=+e.target.value;updatePlane(L)};
 }
+function applyLang(){document.documentElement.lang=LANG==='zh'?'zh-CN':'en';document.title=t('Midtown Manhattan')+Z(' Skyline Model',' · 天际线模型');
+  document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t(e.dataset.i));$('#tLang').textContent=Z('中文','English');
+  for(const L of LMS){L.labelEl.textContent=nm(L);for(const lo of L.ilabels||[]){const d=lo.element;d.textContent=LANG==='zh'&&(SP[d.dataset.en]||UI[d.dataset.en])||d.dataset.en}}
+  renderList();applyYear(YEAR);renderInfo();refresh()}
 function flyTo(L){const b=L.box,h=Math.min(L.h,b.max.y),ctr=b.getCenter(new THREE.Vector3());const c=W(L.u+ctr.x,h*0.45,L.v-ctr.z);const dir=camera.position.clone().sub(controls.target);dir.y=Math.max(dir.y,dir.length()*(h<120?0.85:0.3));dir.normalize();
   const dist=Math.max(170,h*1.3+Math.max(b.max.x-b.min.x,b.max.z-b.min.z)*1.15);FLY={t:0,p0:camera.position.clone(),t0:controls.target.clone(),p1:c.clone().addScaledVector(dir,dist),t1:c}}
 function select(id,fly){if(SEL===id){if(fly&&id)flyTo(LM[id]);return}
@@ -410,7 +419,7 @@ function hitLM(e){ptr.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1)
 renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];TOUR=false;$('#tTour').classList.remove('on')});
 renderer.domElement.addEventListener('pointerup',e=>{if(!down)return;const d=Math.hypot(e.clientX-down[0],e.clientY-down[1]);down=null;if(d>5)return;const L=hitLM(e);if(L)select(L.id,true)});
 renderer.domElement.addEventListener('pointermove',e=>{const now=performance.now();if(now-lastMove<70||down)return;lastMove=now;const L=hitLM(e),tip=$('#tip');
-  if(L){tip.style.display='block';tip.textContent=L.name;tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+12)+'px';renderer.domElement.style.cursor='pointer'}else{tip.style.display='none';renderer.domElement.style.cursor=''}
+  if(L){tip.style.display='block';tip.textContent=nm(L);tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+12)+'px';renderer.domElement.style.cursor='pointer'}else{tip.style.display='none';renderer.domElement.style.cursor=''}
   const p=ray.ray.intersectPlane(groundPlane,new THREE.Vector3());if(p&&p.distanceTo(camera.position)<20000){const l=city.worldToLocal(p.clone()),ll=toLL(l.x,-l.z);$('#coord').textContent=fmtLL(ll)}});
 renderer.domElement.addEventListener('pointerleave',()=>{$('#tip').style.display='none'});
 
@@ -423,6 +432,7 @@ tg('#tXray',v=>{XALL=v;refresh();if(SEL)renderInfo()});tg('#tSlice',v=>{SLICE=v;
 $('#slicePos').oninput=e=>{SLICEPOS=+e.target.value;updateGPlane()};$('#sliceAx').onclick=()=>{SLICEAX=SLICEAX==='v'?'u':'v';refresh()};
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);labelRenderer.setSize(innerWidth,innerHeight)});
 addEventListener('keydown',e=>{if(e.key==='Escape')select(null)});
+$('#tLang').onclick=()=>{LANG=LANG==='en'?'zh':'en';try{localStorage.setItem('mm-lang',LANG)}catch(e){}applyLang()};
 
 /* ============================ loop ============================ */
 const clock=new THREE.Clock(),_wp=new THREE.Vector3();
@@ -448,7 +458,7 @@ function loop(){const dt=Math.min(clock.getDelta(),0.05),t=clock.elapsedTime;
   await tick(0.8,'Planting trees, starting traffic');buildTrees();buildTraffic();
   await tick(0.95,'Setting the light');
   const V=VIEWS.hudson;camera.position.copy(W(...V.p));controls.target.copy(W(...V.t));controls.update();
-  applyTime(+$('#time').value);renderList();applyYear(2026);refresh();renderInfo();
+  applyTime(+$('#time').value);refresh();applyLang();
   window.__APP={THREE,scene,city,camera,controls,LMS,LM,M,GEO,geojson,toLL,select,refresh,buildInterior,goView};
   loop();setTimeout(()=>{const l=$('#loading');l.style.opacity=0;setTimeout(()=>l.remove(),700)},150);
 })();

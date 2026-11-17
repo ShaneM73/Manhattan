@@ -11,6 +11,7 @@ A georeferenced, see-through 3D model of the Midtown Manhattan skyline, from 30t
 - **Time.** A time-of-day slider for sunset and night lighting, and a year slider from 1890 to 2026 that grows the skyline and brings back four demolished buildings, including the 1910 Pennsylvania Station.
 - **Landscape.** Both rivers, the Hudson piers, Central Park, Roosevelt Island, the Queensboro Bridge and a distant downtown skyline, among several thousand generated context buildings.
 - **Georeferenced.** Every landmark has a WGS84 position; the cursor reads out latitude and longitude.
+- **English or Chinese.** The page opens in English; the 中文 button in the top bar switches the whole interface and every building's history to Chinese, and remembers the choice.
 
 ## Georeferenced data
 
@@ -45,6 +46,7 @@ Then open <http://localhost:8000/>.
 | `index.html` | Page and interface |
 | `app.js` | Scene, landscape, interiors, see-through modes, export |
 | `buildings.js` | Landmark definitions and histories |
+| `zh.js` | Chinese interface text and building histories |
 | `tex.js` | Procedural facade materials |
 | `core.js` | Street grid, WGS84 transform, geometry helpers |
 
